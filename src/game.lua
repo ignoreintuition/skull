@@ -1,27 +1,18 @@
-state = 'game'
-prevState = 'game'
-
 function _init()
-  gameScene = GameScene:new()
+  state = State:new({
+    current = 'title'
+  })
+  controller = Controller:new()
   printMeta()
 end
 
 function _update()
-  if prevState != state then
-    if state == 'game' then
-      gameScene:init()
-    end
-    prevState = state
-  end
-  if state == 'game' then
-    state = gameScene:update()
-  end
+  controller:update()
+  state:update()
 end
 
 function _draw()
-  if state == 'game' then
-    gameScene:draw()
-  end
+  state:get():draw()
 end
 
 function printMeta()
