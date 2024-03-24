@@ -5,6 +5,19 @@ Toolbar = entity:new({
     { name = 'pass', icon = 35, active = false },
     { name = 'cancel', icon = 36, active = false }
   },
+  func = {
+    challenge = function()
+      state:get():challenge()
+    end,
+    raise = function()
+      state:get():raise() 
+    end,
+    pass = function()
+      state:get():pass() 
+    end,
+    cancel = function()
+    end
+  },
   init = function(_ENV, self)
     local gameScene = state:get()
   end,
@@ -29,5 +42,12 @@ Toolbar = entity:new({
     end
     tools[currentTool].active = false
     tools[currentTool % #tools + 1].active = true
+  end,
+  action = function(_ENV)
+    for k, v in ipairs(tools) do
+      if v.active == true then
+      func[v.name]() 
+      end
+    end
   end
 })

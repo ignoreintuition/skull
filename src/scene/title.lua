@@ -1,5 +1,5 @@
 Title = Scene:new({
-  init = function(_ENV)
+  init = function(_ENV, config)
   end,
   update = function(_ENV)
     return 'title'
@@ -14,7 +14,7 @@ Title = Scene:new({
     print("adapted from the game by", 15, 48, 7)
     print("herve marly", 40, 56, 7)
     print("press 🅾️ to start", 30, 72, 7)
-    
+    print("press ❎ for settings", 23, 80, 7)
 
   end
 })

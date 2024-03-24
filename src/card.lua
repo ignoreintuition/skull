@@ -22,8 +22,8 @@ Card = entity:new({
     end
   end,
   play = function(_ENV, player)
-    x = seats[player].x + 16 
-    y = seats[player].y + 16 
+    x = seats[player].x + 16
+    y = seats[player].y + 16
     inHand = false
   end
 })

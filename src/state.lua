@@ -1,18 +1,20 @@
 State = entity:new({
-  current = 'game',
-  previous = current,
+  current = 'title',
+  previous = 'title',
+  playerCnt = 6,
   activeDialog = false,
   activeToolbar = false,
+  activeWidget = false,
   scenes = {},
   init = function(_ENV, self)
-    scenes.game = GameScene:new()
-    scenes.title = Title:new()
-    scenes.gameOver = GameOver:new()
-    scenes.settings = Settings:new()
+    scenes.title = Title:new({playerCnt = playerCnt})
+    scenes.gameOver = GameOver:new({playerCnt = playerCnt})
+    scenes.settings = Settings:new({playerCnt = playerCnt})
+    scenes.game = GameScene:new({playerCnt = playerCnt})
   end,
   update = function(_ENV)
-    if stateChange() then
-      scenes[current]:init()
+    if stateChange(_ENV) then
+      scenes[current]:init({playerCnt = playerCnt})
       previous = current
     end
     current = scenes[current]:update()
@@ -26,7 +28,7 @@ State = entity:new({
   getCurrent = function(_ENV)
     return current
   end,
-  stateChange = function()
+  stateChange = function(_ENV)
     return previous != current
   end
 })

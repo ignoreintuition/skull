@@ -13,7 +13,8 @@ UI = entity:new({
   drawHeader = function(_ENV)
     rectfill(0, 0, 127, 7, 2)
     line(0, 7, 127, 7, 7)
-    print('skull & rose', 0, 0, 7)
+    print('skull', 0, 0, 7)
+    print(find(modes, state:get().mode), 40, 0, 7)
     print('round ' .. state:get().round, 96, 0, 7)
   end,
   drawCanvas = function(_ENV)

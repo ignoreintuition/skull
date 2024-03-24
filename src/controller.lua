@@ -5,6 +5,8 @@ Controller = entity:new({
         handleDialog(_ENV)
       elseif state.activeToolbar then
         handleToolbar(_ENV)
+      elseif state.activeWidget then
+        handleWidget(_ENV)
       else
         handlePlay(_ENV)
       end
@@ -12,11 +14,19 @@ Controller = entity:new({
     title = function(_ENV)
       if btnp(4) then
         state:set('game')
+      elseif btnp(5) then
+        state:set('settings')
       end
     end,
     gameOver = function(_ENV)
     end,
     settings = function(_ENV)
+      local settingScene = state:get()
+      if btnp(5) then
+        state:set('title')
+      elseif btnp(1) then
+        state.playerCnt = state.playerCnt % 6 + 1
+      end
     end
   },
   init = function(_ENV)
@@ -26,31 +36,54 @@ Controller = entity:new({
   end,
   handleDialog = function(_ENV)
     local gameScene = state:get()
+    local dialogs = gameScene.dialogs
     if btnp(4) then
-      gameScene.dialogs[#gameScene.dialogs].cb()
-      del(gameScene.dialogs, gameScene.dialogs[#gameScene.dialogs])
-      state.activeDialog = #gameScene.dialogs == 1
+      dialogs[#dialogs].cb()
+      del(dialogs, dialogs[#gameScene.dialogs])
+      state.activeDialog = #dialogs == 1
     end
   end,
   handleToolbar = function(_ENV)
     local gameScene = state:get()
+    local toolbars = gameScene.toolbars
     if btnp(5) then
-      del(gameScene.toolbars, gameScene.toolbars[#gameScene.toolbars])
-      state.activeToolbar = #gameScene.toolbars == 1
+      del(toolbars, toolbars[#toolbars])
+      state.activeToolbar = #toolbars == 1
+    elseif btnp(4) then
+      toolbars[#toolbars]:action()
+      del(toolbars, toolbars[#toolbars])
+      state.activeToolbar = #toolbars == 1
     elseif btnp(1) then
-      gameScene.toolbars[#gameScene.toolbars]:selectNext()
+      toolbars[#toolbars]:selectNext()
     elseif btnp(0) then
       -- move left
     end
   end,
+  handleWidget = function(_ENV)
+    local gameScene = state:get()
+    local widgets = gameScene.widgets
+    if btnp(5) then
+      del(widgets, widgets[#widgets])
+      state.activeWidget = #widgets == 1
+    elseif btnp(4) then
+      widgets[#widgets]:action()
+      del(widgets, widgets[#widgets])
+      state.activeWidget = #widgets == 1
+    elseif btnp(1) then
+      widgets[#widgets].bid += 1
+    elseif btnp(0) then
+      widgets[#widgets].bid -= 1
+    end
+  end,
   handlePlay = function(_ENV)
     local gameScene = state:get()
-    if btnp(4) then
+    local mode = gameScene.mode
+    if btnp(4) and (mode == modes['start'] or mode == modes['place']) then
       gameScene:play()
     elseif btnp(5) then
       gameScene:action()
     elseif btnp(1) then
-      gameScene.cursor:selectCard()
+      gameScene.cursor:selectNextCard()
     elseif btn(0) then
       -- move left
     end

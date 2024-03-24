@@ -24,5 +24,5 @@ modes = {
   start = 1,
   place = 2,
   challenge = 3,
-  revelation = 4  
+  revelation = 4
 }

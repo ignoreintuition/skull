@@ -1,19 +1,25 @@
 GameScene = Scene:new({
   name = 'game',
-  names = { 'brian', 'zona', 'nick', 'mitch', 'cj', 'matt' },
-  round = 1,
   mode = modes.start,
   players = {},
+  playerCnt = 6,
+  round = 1,
+  currentBid = 0,
+
   cursor = {},
   dialogs = {},
   toolbars = {},
-  init = function(_ENV)
+  widgets = {},
+
+  init = function(_ENV, self)
+    players = {}
+    playerCnt = self.playerCnt
     ui = UI:new()
     cursor = Cursor:new()
-    for k, v in ipairs(names) do
+    for k = 1, playerCnt, 1 do
       add(
         players, Player:new({
-          name = v,
+          x,
           number = k,
           active = k == 1
         })
@@ -33,6 +39,9 @@ GameScene = Scene:new({
     for v in all(toolbars) do
       v:update()
     end
+    for v in all(widgets) do
+      v:update()
+    end
     return 'game'
   end,
   draw = function(_ENV)
@@ -46,6 +55,9 @@ GameScene = Scene:new({
     for v in all(toolbars) do
       v:draw()
     end
+    for v in all(widgets) do
+      v:draw()
+    end
     cursor:draw()
   end,
   nextPlayer = function(_ENV)
@@ -57,11 +69,55 @@ GameScene = Scene:new({
       v.active = currentPlayer == k
     end
   end,
+  challenge = function(_ENV)
+    mode = modes.challenge
+    add(
+      widgets, Widget:new({
+        cb = function()
+          state.activeWidget = false
+          add(
+            dialogs, Dialog:new({
+              text = "player " .. currentPlayer .. "\nissues a\nchallenge",
+              cancellable = false,
+              cb = function()
+                state:get():nextPlayer()
+              end
+            })
+          )
+          state.activeDialog = true
+        end
+      })
+    )
+    state.activeWidget = true
+  end,
+  raise = function(_ENV)
+    add(
+      widgets, Widget:new({
+        cb = function()
+          state.activeWidget = false
+          add(
+            dialogs, Dialog:new({
+              text = "player " .. currentPlayer .. "\nraised bid",
+              cancellable = false,
+              cb = function()
+                state:get():nextPlayer()
+              end
+            })
+          )
+          state.activeDialog = true
+        end
+      })
+    )
+    state.activeWidget = true
+  end,
+  pass = function(_ENV)
+    state:get():nextPlayer()
+  end,
   play = function(_ENV)
     players[currentPlayer].stack:addCard(players[currentPlayer].hand:playCard(currentPlayer))
     add(
       dialogs, Dialog:new({
-        text = "pass to\n" .. players[currentPlayer % #players + 1].name,
+        text = "pass to\nplayer " .. players[currentPlayer % #players + 1].number,
         cancellable = false,
         cb = function()
           nextPlayer(_ENV)

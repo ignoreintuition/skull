@@ -22,7 +22,7 @@ Cursor = entity:new({
   draw = function(_ENV)
     spr(32, x, y, 1, 1)
   end,
-  selectCard = function(_ENV, dir)
+  selectNextCard = function(_ENV, dir)
     local gameScene = state:get()
     local hand = gameScene.players[gameScene.currentPlayer].hand
     hand.selectedCard = hand.selectedCard % #hand.cards + 1
