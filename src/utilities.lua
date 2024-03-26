@@ -4,3 +4,9 @@ function find(tbl, val)
   end
   return nil
 end
+
+function callAll(tbl, fn) 
+  for v in all(tbl) do
+    v[fn](v)
+  end
+end

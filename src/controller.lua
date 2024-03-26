@@ -70,16 +70,18 @@ Controller = entity:new({
       del(widgets, widgets[#widgets])
       state.activeWidget = #widgets == 1
     elseif btnp(1) then
-      widgets[#widgets].bid += 1
+      widgets[#widgets]:increase()
     elseif btnp(0) then
-      widgets[#widgets].bid -= 1
+      widgets[#widgets]:decrease()
     end
   end,
   handlePlay = function(_ENV)
     local gameScene = state:get()
     local mode = gameScene.mode
     if btnp(4) and (mode == modes['start'] or mode == modes['place']) then
-      gameScene:play()
+      if not gameScene:play() then
+        gameScene:action()
+      end
     elseif btnp(5) then
       gameScene:action()
     elseif btnp(1) then

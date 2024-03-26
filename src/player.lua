@@ -8,6 +8,8 @@ Player = entity:new({
   wins = 0,
   face = 38,
   currentBid = 0,
+  passed = false,
+  challenger = false,
   init = function(_ENV, self)
     self.colors = colorRamps[self.number]
     self.hand = Hand:new()
@@ -43,13 +45,11 @@ Player = entity:new({
   drawStats = function(_ENV)
     spr(face, 98, 11 + 16 * (number - 1) + (number - 1) * 2)
     print("p" .. number, 108, 12 + 16 * (number - 1) + (number - 1) * 2, 13)
-    -- TODO check if highest big
-    if false then
+    if challenger then
       circfill(120, 11 + 16 * (number - 1) + (number - 1) * 2 + 4, 3, 11)
-      print("1", 119, 12 + 16 * (number - 1) + (number - 1) * 2 + 1, 7)
+      print(state:get().currentBid, 119, 12 + 16 * (number - 1) + (number - 1) * 2 + 1, 7)
     end
-    -- TODO check if passed
-    if false then
+    if passed then
       circfill(120, 11 + 16 * (number - 1) + (number - 1) * 2 + 4, 3, 8)
       print("x", 119, 12 + 16 * (number - 1) + (number - 1) * 2 + 1, 7)
     end

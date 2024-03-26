@@ -3,8 +3,10 @@ GameScene = Scene:new({
   mode = modes.start,
   players = {},
   playerCnt = 6,
+  currentPlayer = 1,
   round = 1,
   currentBid = 0,
+  maxBid = 10,
 
   cursor = {},
   dialogs = {},
@@ -26,41 +28,54 @@ GameScene = Scene:new({
       )
     end
   end,
-  currentPlayer = 1,
   update = function(_ENV)
     ui:update()
     cursor:update()
-    for v in all(players) do
-      v:update()
+    callAll(players, 'update')
+    callAll(dialogs, 'update')
+    callAll(toolbars, 'update')
+    callAll(widgets, 'update')
+    local active = 0
+    for k, v in pairs(players) do
+      if v.challenger or v.passed then
+        active += 1
+      end
     end
-    for v in all(dialogs) do
-      v:update()
-    end
-    for v in all(toolbars) do
-      v:update()
-    end
-    for v in all(widgets) do
-      v:update()
+    if active == #players then
+      if mode != modes.revelation then
+        for k, v in ipairs(players) do
+          if v.challenger then
+            currentPlayer = k
+            for k, v in ipairs(players) do
+              v.active = currentPlayer == k
+            end
+          end
+        end
+        add(
+          dialogs, Dialog:new({
+            text = "player " .. currentPlayer .. "\nreveal\ncards",
+            cancellable = false,
+            cb = function()
+              printh('revelation')
+            end
+          })
+        )
+        state.activeDialog = true
+      end
+      mode = modes.revelation
     end
     return 'game'
   end,
   draw = function(_ENV)
     ui:draw()
-    for v in all(players) do
-      v:draw()
-    end
-    for v in all(dialogs) do
-      v:draw()
-    end
-    for v in all(toolbars) do
-      v:draw()
-    end
-    for v in all(widgets) do
-      v:draw()
-    end
+    callAll(players, 'draw')
+    callAll(dialogs, 'draw')
+    callAll(toolbars, 'draw')
+    callAll(widgets, 'draw')
     cursor:draw()
   end,
   nextPlayer = function(_ENV)
+    -- TODO skip player if passed
     if currentPlayer == #players and mode == modes.start then
       mode = modes.place
     end
@@ -95,6 +110,7 @@ GameScene = Scene:new({
       widgets, Widget:new({
         cb = function()
           state.activeWidget = false
+          -- TODO update dialog to indicate who to pass to
           add(
             dialogs, Dialog:new({
               text = "player " .. currentPlayer .. "\nraised bid",
@@ -111,9 +127,14 @@ GameScene = Scene:new({
     state.activeWidget = true
   end,
   pass = function(_ENV)
-    state:get():nextPlayer()
+    local gameScene = state:get()
+    gameScene.players[gameScene.currentPlayer].passed = true
+    gameScene:nextPlayer()
   end,
   play = function(_ENV)
+    if #players[currentPlayer].hand.cards == 0 then
+      return false
+    end
     players[currentPlayer].stack:addCard(players[currentPlayer].hand:playCard(currentPlayer))
     add(
       dialogs, Dialog:new({
@@ -125,6 +146,7 @@ GameScene = Scene:new({
       })
     )
     state.activeDialog = true
+    return true
   end,
   action = function(_ENV)
     if mode == modes.start then
@@ -137,6 +159,7 @@ GameScene = Scene:new({
         })
       )
       state.activeDialog = true
+      return true
     elseif mode == modes.place then
       add(
         toolbars, Toolbar:new({
@@ -147,6 +170,7 @@ GameScene = Scene:new({
         })
       )
       state.activeToolbar = true
+      return true
     elseif mode == modes.challenge then
       add(
         toolbars, Toolbar:new({
@@ -159,7 +183,8 @@ GameScene = Scene:new({
       )
       state.activeToolbar = true
     elseif mode == modes.revelation then
-      add(toolbars, Toolbar:new())
+      -- TODO add revelation
+      return true
     end
   end
 })
