@@ -7,6 +7,7 @@ GameScene = Scene:new({
   round = 1,
   currentBid = 0,
   maxBid = 10,
+  revealed = 0,
 
   cursor = {},
   dialogs = {},
@@ -51,16 +52,7 @@ GameScene = Scene:new({
             end
           end
         end
-        add(
-          dialogs, Dialog:new({
-            text = "player " .. currentPlayer .. "\nreveal\ncards",
-            cancellable = false,
-            cb = function()
-              printh('revelation')
-            end
-          })
-        )
-        state.activeDialog = true
+        cursor:selectStack(currentPlayer)
       end
       mode = modes.revelation
     end
@@ -69,20 +61,30 @@ GameScene = Scene:new({
   draw = function(_ENV)
     ui:draw()
     callAll(players, 'draw')
-    callAll(dialogs, 'draw')
     callAll(toolbars, 'draw')
-    callAll(widgets, 'draw')
     cursor:draw()
+    callAll(widgets, 'draw')
+    callAll(dialogs, 'draw')
   end,
   nextPlayer = function(_ENV)
-    -- TODO skip player if passed
     if currentPlayer == #players and mode == modes.start then
       mode = modes.place
     end
-    currentPlayer = currentPlayer % #players + 1
+    repeat
+      currentPlayer = currentPlayer % #players + 1
+    until not players[currentPlayer].passed == true
     for k, v in ipairs(players) do
       v.active = currentPlayer == k
     end
+    add(
+      dialogs, Dialog:new({
+        text = "pass to " .. currentPlayer,
+        cancellable = false,
+        cb = function()
+        end
+      })
+    )
+    state.activeDialog = true
   end,
   challenge = function(_ENV)
     mode = modes.challenge
@@ -90,16 +92,7 @@ GameScene = Scene:new({
       widgets, Widget:new({
         cb = function()
           state.activeWidget = false
-          add(
-            dialogs, Dialog:new({
-              text = "player " .. currentPlayer .. "\nissues a\nchallenge",
-              cancellable = false,
-              cb = function()
-                state:get():nextPlayer()
-              end
-            })
-          )
-          state.activeDialog = true
+          state:get():nextPlayer()
         end
       })
     )
@@ -110,17 +103,7 @@ GameScene = Scene:new({
       widgets, Widget:new({
         cb = function()
           state.activeWidget = false
-          -- TODO update dialog to indicate who to pass to
-          add(
-            dialogs, Dialog:new({
-              text = "player " .. currentPlayer .. "\nraised bid",
-              cancellable = false,
-              cb = function()
-                state:get():nextPlayer()
-              end
-            })
-          )
-          state.activeDialog = true
+          state:get():nextPlayer()
         end
       })
     )
@@ -132,20 +115,29 @@ GameScene = Scene:new({
     gameScene:nextPlayer()
   end,
   play = function(_ENV)
-    if #players[currentPlayer].hand.cards == 0 then
-      return false
+    if mode == modes.start or mode == modes.place then
+      if #players[currentPlayer].hand.cards == 0 then
+        return false
+      end
+      players[currentPlayer].stack:addCard(players[currentPlayer].hand:playCard(currentPlayer))
+      nextPlayer(_ENV)
+    elseif mode == modes.revelation then
+      -- TODO check if all players cards have been revealed
+      -- TODO pop cards off the stack
+      -- TODO if game end award win or remove card
+      if revealed < maxBid then
+        add(
+          dialogs, Dialog:new({
+            text = players[cursor.highlightedStack].stack.cards[#players[cursor.highlightedStack].stack.cards].face,
+            cancellable = false,
+            cb = function()
+            end
+          })
+        )
+        state.activeDialog = true
+      end
+      return true
     end
-    players[currentPlayer].stack:addCard(players[currentPlayer].hand:playCard(currentPlayer))
-    add(
-      dialogs, Dialog:new({
-        text = "pass to\nplayer " .. players[currentPlayer % #players + 1].number,
-        cancellable = false,
-        cb = function()
-          nextPlayer(_ENV)
-        end
-      })
-    )
-    state.activeDialog = true
     return true
   end,
   action = function(_ENV)
@@ -183,7 +175,15 @@ GameScene = Scene:new({
       )
       state.activeToolbar = true
     elseif mode == modes.revelation then
-      -- TODO add revelation
+      add(
+        dialogs, Dialog:new({
+          text = "no other\nactions\navailable",
+          cancellable = false,
+          cb = function()
+          end
+        })
+      )
+      state.activeDialog = true
       return true
     end
   end

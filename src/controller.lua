@@ -78,14 +78,22 @@ Controller = entity:new({
   handlePlay = function(_ENV)
     local gameScene = state:get()
     local mode = gameScene.mode
-    if btnp(4) and (mode == modes['start'] or mode == modes['place']) then
-      if not gameScene:play() then
-        gameScene:action()
+    if btnp(4) then
+      if mode == modes['start'] or mode == modes['place'] then
+        if not gameScene:play() then
+          gameScene:action()
+        end
+      elseif mode == modes['revelation'] then
+        gameScene:play()
       end
     elseif btnp(5) then
       gameScene:action()
     elseif btnp(1) then
-      gameScene.cursor:selectNextCard()
+      if gameScene.mode == modes.start or gameScene.mode == modes.place then
+        gameScene.cursor:selectNextCard()
+      elseif gameScene.mode == modes.revelation then
+        gameScene.cursor:selectNextStack()
+      end
     elseif btn(0) then
       -- move left
     end
