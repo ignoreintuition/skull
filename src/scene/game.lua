@@ -5,9 +5,14 @@ GameScene = Scene:new({
   playerCnt = 6,
   currentPlayer = 1,
   round = 1,
+  roundOver = false,
   currentBid = 0,
-  maxBid = 10,
+  maxBid = 0,
   revealed = 0,
+  out = false,
+
+  selectedStack = {},
+  currentPlayerStack = {},
 
   cursor = {},
   dialogs = {},
@@ -15,7 +20,19 @@ GameScene = Scene:new({
   widgets = {},
 
   init = function(_ENV, self)
+    mode = modes.start
     players = {}
+    currentPlayer = 1
+    round = 1
+    roundOver = false
+    currentBid = 0
+    maxBid = 0
+    revealed = 0
+    out = false
+    selectedStack = {}
+    currentPlayerStack = {}
+    cursor = {}
+    mode = modes.start
     playerCnt = self.playerCnt
     ui = UI:new()
     cursor = Cursor:new()
@@ -30,6 +47,9 @@ GameScene = Scene:new({
     end
   end,
   update = function(_ENV)
+    if players[currentPlayer].out == true then
+      nextPlayer(_ENV)
+    end
     ui:update()
     cursor:update()
     callAll(players, 'update')
@@ -38,11 +58,11 @@ GameScene = Scene:new({
     callAll(widgets, 'update')
     local active = 0
     for k, v in pairs(players) do
-      if v.challenger or v.passed then
+      if v.challenger or v.passed or v.out then
         active += 1
       end
     end
-    if active == #players then
+    if revelation(_ENV, active) then
       if mode != modes.revelation then
         for k, v in ipairs(players) do
           if v.challenger then
@@ -56,6 +76,10 @@ GameScene = Scene:new({
       end
       mode = modes.revelation
     end
+    maxBid = 0
+    for v in all(players) do
+      maxBid += #v.stack.cards
+    end
     return 'game'
   end,
   draw = function(_ENV)
@@ -67,18 +91,24 @@ GameScene = Scene:new({
     callAll(dialogs, 'draw')
   end,
   nextPlayer = function(_ENV)
+    local text = ""
     if currentPlayer == #players and mode == modes.start then
       mode = modes.place
     end
-    repeat
-      currentPlayer = currentPlayer % #players + 1
-    until not players[currentPlayer].passed == true
-    for k, v in ipairs(players) do
-      v.active = currentPlayer == k
+    if currentBid == maxBid and mode == modes.challenge then
+      text = "max bid\nshow cards"
+    else
+      repeat
+        currentPlayer = currentPlayer % #players + 1
+      until not players[currentPlayer].passed == true and not players[currentPlayer].out == true
+      for k, v in ipairs(players) do
+        v.active = currentPlayer == k
+      end
+      text = "pass to " .. "\nplayer " .. currentPlayer
     end
     add(
       dialogs, Dialog:new({
-        text = "pass to " .. currentPlayer,
+        text = text,
         cancellable = false,
         cb = function()
         end
@@ -122,18 +152,61 @@ GameScene = Scene:new({
       players[currentPlayer].stack:addCard(players[currentPlayer].hand:playCard(currentPlayer))
       nextPlayer(_ENV)
     elseif mode == modes.revelation then
-      -- TODO check if all players cards have been revealed
-      -- TODO pop cards off the stack
-      -- TODO if game end award win or remove card
-      if revealed < maxBid then
-        add(
-          dialogs, Dialog:new({
-            text = players[cursor.highlightedStack].stack.cards[#players[cursor.highlightedStack].stack.cards].face,
-            cancellable = false,
-            cb = function()
+      selectedStack = players[cursor.highlightedStack].stack.cards
+      currentPlayerStack = players[currentPlayer].stack.cards
+      if canPlay(_ENV) then
+        revealed += 1
+        if selectedStack[#selectedStack].face == skull then
+          players[currentPlayer].losses += 1
+          players[currentPlayer].lostRound = true
+          add(
+            dialogs, Dialog:new({
+              text = 'skull \nyou lose\n\none card\nremoved\nfrom hand',
+              cancellable = false,
+              cb = function()
+                nextRound(_ENV)
+              end
+            })
+          )
+        else
+          if revealed == currentBid then
+            players[currentPlayer].wins += 1
+            if players[currentPlayer].wins == 2 then
+              add(
+                dialogs, Dialog:new({
+                  text = 'game over\nwinner is\nplayer ' .. currentPlayer,
+                  cancellable = false,
+                  cb = function()
+                    state.winner = currentPlayer
+                    state.current = 'gameOver'
+                  end
+                })
+              )
+            else
+              add(
+                dialogs, Dialog:new({
+                  text = 'you win',
+                  cancellable = false,
+                  cb = function()
+                    nextRound(_ENV)
+                  end
+                })
+              )
             end
-          })
-        )
+          else
+            add(
+              dialogs, Dialog:new({
+                text = 'rose\n' .. currentBid - revealed .. ' remaining',
+                cancellable = false,
+                cb = function()
+                  selectedStack[#selectedStack].inHand = true
+                  add(players[cursor.highlightedStack].hand.cards, selectedStack[#selectedStack])
+                  del(selectedStack, selectedStack[#selectedStack])
+                end
+              })
+            )
+          end
+        end
         state.activeDialog = true
       end
       return true
@@ -186,5 +259,62 @@ GameScene = Scene:new({
       state.activeDialog = true
       return true
     end
+  end,
+  canPlay = function(_ENV)
+    if revealed >= currentBid then
+      return false
+    elseif cursor.highlightedStack == currentPlayer and #selectedStack > 0 then
+      return true
+    elseif #selectedStack > 0 and #currentPlayerStack == 0 then
+      return true
+    end
+    return false
+  end,
+  nextRound = function(_ENV)
+    currentBid = 0
+    revealed = 0
+    round = round + 1
+    mode = modes.start
+    for k, v in ipairs(players) do
+      local playerToDel = 0
+      v.challenger = false
+      v.passed = false
+      for j, w in ipairs(v.stack.cards) do
+        w.inHand = true
+        add(v.hand.cards, w)
+      end
+      for j, w in pairs(v.stack.cards) do
+        v.stack.cards[j] = nil
+      end
+      if v.lostRound == true then
+        local cardToDel = flr(rnd(#v.hand.cards)) + 1
+        deli(v.hand.cards, cardToDel)
+        v.lostRound = false
+        if #v.hand.cards == 0 then
+          playerToDel = k
+        end
+      end
+      if playerToDel > 0 then
+        players[playerToDel].out = true
+      end
+    end
+    local playersOut = 0
+    for k, v in ipairs(players) do
+      if v.out == true then
+        playersOut += 1
+      end
+    end
+    if playersOut == #players - 1 then
+      state.current = 'gameOver'
+      state.winner = currentPlayer
+    end
+  end,
+  revelation = function(_ENV, active)
+    if active == #players then
+      return true
+    elseif mode == modes.challenge and currentBid == maxBid then
+      return true
+    end
+    return false
   end
 })

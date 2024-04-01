@@ -26,6 +26,9 @@ Controller = entity:new({
         state:set('title')
       elseif btnp(1) then
         state.playerCnt = state.playerCnt % 6 + 1
+        if state.playerCnt == 1 then 
+          state.playerCnt += 1
+        end
       end
     end
   },
@@ -56,7 +59,7 @@ Controller = entity:new({
     elseif btnp(1) then
       toolbars[#toolbars]:selectNext()
     elseif btnp(0) then
-      -- move left
+      --TODO move left
     end
   end,
   handleWidget = function(_ENV)
@@ -95,7 +98,7 @@ Controller = entity:new({
         gameScene.cursor:selectNextStack()
       end
     elseif btn(0) then
-      -- move left
+      -- TODO move left
     end
   end
 })

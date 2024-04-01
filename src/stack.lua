@@ -15,8 +15,12 @@ Stack = entity:new({
     end
     local x = seats[playerNumber].x
     local y = seats[playerNumber].y
-    rectfill(x+ 12, y+ 12, x + 20, y + 20, 0)
-    print(#cards, x + 15, y + 14, 7)
+    rectfill(x + 12, y + 12, x + 20, y + 20, 0)
+    if state:get().players[playerNumber].out == true then
+      print('x', x + 15, y + 14, 7)
+    else
+      print(#cards, x + 15, y + 14, 7)
+    end
   end,
   removeCard = function(_ENV, number)
     del(cards, cards[number])

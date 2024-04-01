@@ -5,6 +5,9 @@ Cursor = entity:new({
   visible = true,
   highlightedStack = 0,
   init = function(_ENV, self)
+    self.x = 16
+    self.y = 120
+    self.highlightedStack = 1
   end,
   update = function(_ENV)
     local gameScene = state:get()

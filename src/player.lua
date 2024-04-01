@@ -9,6 +9,7 @@ Player = entity:new({
   face = 38,
   currentBid = 0,
   passed = false,
+  lostRound = false,
   challenger = false,
   init = function(_ENV, self)
     self.colors = colorRamps[self.number]

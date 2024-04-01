@@ -28,7 +28,7 @@ Widget = entity:new({
   end,
   increase = function(_ENV)
     if bid < state:get().maxBid then
-    bid +=1
+      bid += 1
     end
   end,
   decrease = function(_ENV)
