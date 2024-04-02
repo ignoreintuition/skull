@@ -10,10 +10,10 @@ Toolbar = entity:new({
       state:get():challenge()
     end,
     raise = function()
-      state:get():raise() 
+      state:get():raise()
     end,
     pass = function()
-      state:get():pass() 
+      state:get():pass()
     end,
     cancel = function()
     end
@@ -33,7 +33,7 @@ Toolbar = entity:new({
       end
     end
   end,
-  selectNext = function(_ENV)
+  selectNext = function(_ENV, dir)
     local currentTool = 0
     for k, v in ipairs(tools) do
       if v.active == true then
@@ -41,12 +41,13 @@ Toolbar = entity:new({
       end
     end
     tools[currentTool].active = false
-    tools[currentTool % #tools + 1].active = true
+    tools[getNext(currentTool, #tools, dir)].active = true
   end,
+
   action = function(_ENV)
     for k, v in ipairs(tools) do
       if v.active == true then
-      func[v.name]() 
+        func[v.name]()
       end
     end
   end

@@ -42,15 +42,15 @@ Cursor = entity:new({
   selectNextCard = function(_ENV, dir)
     local gameScene = state:get()
     local hand = gameScene.players[gameScene.currentPlayer].hand
-    hand.selectedCard = hand.selectedCard % #hand.cards + 1
+    hand.selectedCard = getNext(hand.selectedCard, #hand.cards, dir)
   end,
   selectStack = function(_ENV, player)
     local gameScene = state:get()
     highlightedStack = player
   end,
-  selectNextStack = function(_ENV)
+  selectNextStack = function(_ENV, dir)
     local gameScene = state:get()
-    highlightedStack = highlightedStack % gameScene.playerCnt + 1
+    highlightedStack = getNext(highlightedStack, gameScene.playerCnt, dir)
   end,
   selectToolbar = function(_ENV)
   end

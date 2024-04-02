@@ -57,9 +57,9 @@ Controller = entity:new({
       del(toolbars, toolbars[#toolbars])
       state.activeToolbar = #toolbars == 1
     elseif btnp(1) then
-      toolbars[#toolbars]:selectNext()
+      toolbars[#toolbars]:selectNext(1)
     elseif btnp(0) then
-      --TODO move left
+      toolbars[#toolbars]:selectNext(-1)
     end
   end,
   handleWidget = function(_ENV)
@@ -93,12 +93,16 @@ Controller = entity:new({
       gameScene:action()
     elseif btnp(1) then
       if gameScene.mode == modes.start or gameScene.mode == modes.place then
-        gameScene.cursor:selectNextCard()
+        gameScene.cursor:selectNextCard(1)
       elseif gameScene.mode == modes.revelation then
-        gameScene.cursor:selectNextStack()
+        gameScene.cursor:selectNextStack(1)
       end
-    elseif btn(0) then
-      -- TODO move left
+    elseif btnp(0) then
+      if gameScene.mode == modes.start or gameScene.mode == modes.place then
+        gameScene.cursor:selectNextCard(-1)
+      elseif gameScene.mode == modes.revelation then
+        gameScene.cursor:selectNextStack(-1)
+      end
     end
   end
 })

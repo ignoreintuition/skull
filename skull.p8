@@ -2,7 +2,7 @@ pico-8 cartridge // http://www.pico-8.com
 version 41
 __lua__
 
---skull and roses 0.1.0
+--skull and roses 1.0.1
 --by ignoreIntuition
 --game
 #include src/constants.lua

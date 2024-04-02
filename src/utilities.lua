@@ -10,3 +10,13 @@ function callAll(tbl, fn)
     v[fn](v)
   end
 end
+
+function getNext(number, length, iteration)
+  number = number + iteration
+  if number == 0 then
+    return length
+  elseif number > length then
+    return 1
+  end
+  return number 
+end

@@ -117,10 +117,10 @@ GameScene = Scene:new({
     state.activeDialog = true
   end,
   challenge = function(_ENV)
-    mode = modes.challenge
     add(
       widgets, Widget:new({
         cb = function()
+          mode = modes.challenge
           state.activeWidget = false
           state:get():nextPlayer()
         end
@@ -161,7 +161,7 @@ GameScene = Scene:new({
           players[currentPlayer].lostRound = true
           add(
             dialogs, Dialog:new({
-              text = 'skull \nyou lose\n\none card\nremoved\nfrom hand',
+              text = 'skull!\nyou lose\n\none card\nremoved\nfrom hand',
               cancellable = false,
               cb = function()
                 nextRound(_ENV)
@@ -185,7 +185,7 @@ GameScene = Scene:new({
             else
               add(
                 dialogs, Dialog:new({
-                  text = 'you win',
+                  text = 'player ' .. currentPlayer .. '\nwins the\nround',
                   cancellable = false,
                   cb = function()
                     nextRound(_ENV)
@@ -196,7 +196,7 @@ GameScene = Scene:new({
           else
             add(
               dialogs, Dialog:new({
-                text = 'rose\n' .. currentBid - revealed .. ' remaining',
+                text = 'rose!\n\n' .. currentBid - revealed .. ' more\ncard(s)\nremaining',
                 cancellable = false,
                 cb = function()
                   selectedStack[#selectedStack].inHand = true
@@ -207,6 +207,16 @@ GameScene = Scene:new({
             )
           end
         end
+        state.activeDialog = true
+      else
+        add(
+          dialogs, Dialog:new({
+            text = 'please\nselect\na valid\nmove',
+            cancellable = false,
+            cb = function()
+            end
+          })
+        )
         state.activeDialog = true
       end
       return true
